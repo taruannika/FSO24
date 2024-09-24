@@ -25,24 +25,30 @@ const App = () => {
   const addPerson = (e) => {
     e.preventDefault();
     const newPerson = { name: newName, number: phoneNumber };
-
-    // prevent adding names that are already in phonebook
-    const personAlreadyExists = persons.find(
-      (person) => person.name.toLowerCase() === newPerson.name.toLowerCase()
+    const person = persons.find(
+      (p) => p.name.toLowerCase() === newPerson.name.toLowerCase()
     );
-    if (personAlreadyExists) {
-      alert(`${newPerson.name} is already added to phonebook`);
-      setNewName("");
-      setPhoneNumber("");
-      return;
-    }
 
-    // if name is not already added to phonebook, add it
-    service.create(newPerson).then((data) => {
-      setPersons([...persons, data]);
-      setNewName("");
-      setPhoneNumber("");
-    });
+    if (person) {
+      if (
+        window.confirm(
+          `${person.name} is already added to phonebook, replace old number with a new one?`
+        )
+      ) {
+        const changedPerson = { ...person, number: newPerson.number };
+        service.update(person.id, changedPerson).then((updatedPerson) => {
+          setPersons(
+            persons.map((p) => (p.id !== updatedPerson.id ? p : updatedPerson))
+          );
+        });
+      }
+    } else {
+      service.create(newPerson).then((data) => {
+        setPersons([...persons, data]);
+      });
+    }
+    setNewName("");
+    setPhoneNumber("");
   };
 
   const deletePerson = (id) => {
