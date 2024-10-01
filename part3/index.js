@@ -1,5 +1,7 @@
 const express = require("express");
 require("dotenv").config();
+const morgan = require("morgan");
+
 const app = express();
 
 let persons = [
@@ -25,7 +27,13 @@ let persons = [
   },
 ];
 
+const postMorgan = morgan(
+  ":method :url :status :res[content-length] - :response-time ms :body"
+);
+
+morgan.token("body", (req) => JSON.stringify(req.body));
 app.use(express.json());
+app.use(morgan("tiny"));
 
 app.get("/info", (req, res) => {
   const date = new Date();
@@ -52,7 +60,7 @@ app.delete("/api/persons/:id", (req, res) => {
   res.status(204).end();
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", postMorgan, (req, res) => {
   const body = req.body;
 
   if (!body.name || !body.number) {
